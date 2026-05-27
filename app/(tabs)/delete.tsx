@@ -8,26 +8,48 @@ import {
   Dimensions,
   FlatList,
   RefreshControl,
+  StyleProp,
   StyleSheet,
   Text,
+  TextStyle,
   TouchableOpacity,
   View,
+  ViewStyle,
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
-type Total = {
+type DeleteTotal = {
   id: number;
-  name: string;
   total: number;
   count: number;
   time: string;
 };
 
+interface CustomButtonProps {
+  title: string;
+  onPress: () => void;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'danger';
+}
+
+interface TotalItemProps {
+  item: DeleteTotal;
+  onDelete: (id: number) => void;
+  isDark: boolean;
+  index: number;
+}
+
+interface EmptyStateProps {
+  isDark: boolean;
+}
+
 // Custom Button Component
-const CustomButton = ({ title, onPress, style, textStyle, disabled = false, variant = 'primary' }) => {
+const CustomButton: React.FC<CustomButtonProps> = ({ title, onPress, style, textStyle, disabled = false, variant = 'primary' }) => {
   const [scaleValue] = useState(new Animated.Value(1));
 
   const handlePressIn = () => {
@@ -74,7 +96,7 @@ const CustomButton = ({ title, onPress, style, textStyle, disabled = false, vari
 };
 
 // Animated Total Item Component
-const TotalItem = ({ item, onDelete, isDark, index }) => {
+const TotalItem: React.FC<TotalItemProps> = ({ item, onDelete, isDark, index }) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
@@ -104,19 +126,19 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
     danger: '#FF3B30',
   };
 
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return dateString || 'Unknown date';
     }
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -132,7 +154,7 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
     >
       <View style={styles.totalItemHeader}>
         <Text style={[styles.totalItemName, { color: theme.text }]} numberOfLines={1}>
-          {item.name}
+          {`Deleted result #${item.id}`}
         </Text>
         <CustomButton
           title="Delete"
@@ -167,7 +189,7 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
         
         <View style={styles.timeContainer}>
           <Text style={[styles.timeText, { color: theme.secondaryText }]}>
-            Saved on {formatDate(item.time)}
+            Recorded on {formatDate(item.time)}
           </Text>
         </View>
       </View>
@@ -176,7 +198,7 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
 };
 
 // Empty State Component
-const EmptyState = ({ isDark }) => {
+const EmptyState: React.FC<EmptyStateProps> = ({ isDark }) => {
   const theme = {
     text: isDark ? '#ffffff' : '#000000',
     secondaryText: isDark ? '#888888' : '#666666',
@@ -195,11 +217,11 @@ const EmptyState = ({ isDark }) => {
   );
 };
 
-const SaveScreen = () => {
+const DeleteScreen = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const insets = useSafeAreaInsets();
-  const [totals, setTotals] = useState<Total[]>([]);
+  const [totals, setTotals] = useState<DeleteTotal[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -218,7 +240,7 @@ const SaveScreen = () => {
   const fetchTotals = async () => {
     try {
       const rows = await getDeleteTotals();
-      setTotals(rows);
+      setTotals(rows as DeleteTotal[]);
     } catch (error) {
       console.error("Error fetching totals:", error);
       Alert.alert('Error', 'Failed to load saved results');
@@ -289,9 +311,11 @@ const SaveScreen = () => {
 
   const handleDeleteOne = (id: number) => {
     const item = totals.find(t => t.id === id);
+    const itemLabel = item ? `Deleted result #${item.id}` : 'this result';
+
     Alert.alert(
       "Delete Result",
-      `Are you sure you want to delete "${item?.name}"?`,
+      `Are you sure you want to delete ${itemLabel}?`,
       [
         { text: "Cancel", style: "cancel" },
         { 
@@ -334,10 +358,10 @@ const SaveScreen = () => {
         <View style={[styles.header, { backgroundColor: theme.cardBackground }]}>
           <View>
             <Text style={[styles.headerTitle, { color: theme.text }]}>
-              Saved Results
+              Deleted Results
             </Text>
-            <Text style={[styles.headerSubtitle, { color: theme.secondaryText }]}>
-              {totals.length} result{totals.length !== 1 ? 's' : ''} saved
+            <Text style={[styles.headerSubtitle, { color: theme.secondaryText }]}> 
+              {totals.length} deleted result{totals.length !== 1 ? 's' : ''}
             </Text>
           </View>
           <CustomButton
@@ -593,4 +617,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SaveScreen;
+export default DeleteScreen;

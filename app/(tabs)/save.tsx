@@ -104,19 +104,19 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
     danger: '#FF3B30',
   };
 
-  const formatDate = (dateString) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    } catch {
-      return dateString;
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return dateString || 'Unknown date';
     }
+
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (

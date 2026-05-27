@@ -2,6 +2,21 @@ import { openDatabaseSync } from "expo-sqlite";
 
 const db = openDatabaseSync("totals.db");
 
+export type DeleteTotal = {
+  id: number;
+  total: number;
+  count: number;
+  time: string;
+};
+
+export type SavedTotal = {
+  id: number;
+  name: string;
+  total: number;
+  count: number;
+  time: string;
+};
+
 // SQL to create the totals table if it doesn't exist
 const totalsTable = `
   CREATE TABLE IF NOT EXISTS totals (
@@ -45,13 +60,13 @@ export async function insertDeleteTotals(total: number, count: number, time: str
 }
 
 // Fetch all totals
-export async function getTotals() {
-  return await db.getAllAsync("SELECT * FROM totals ORDER BY id DESC;");
+export async function getTotals(): Promise<SavedTotal[]> {
+  return (await db.getAllAsync("SELECT * FROM totals ORDER BY id DESC;")) as SavedTotal[];
 }
 
 // Fetch all deleteTotals
-export async function getDeleteTotals() {
-  return await db.getAllAsync("SELECT * FROM deleteTotals ORDER BY id DESC;");
+export async function getDeleteTotals(): Promise<DeleteTotal[]> {
+  return (await db.getAllAsync("SELECT * FROM deleteTotals ORDER BY id DESC;")) as DeleteTotal[];
 }
 
 // Delete one record by id (totals)
