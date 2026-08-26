@@ -26,8 +26,28 @@ type Total = {
   time: string;
 };
 
+type CustomButtonProps = {
+  title: string;
+  onPress: () => void;
+  style?: any;
+  textStyle?: any;
+  disabled?: boolean;
+  variant?: 'primary' | 'secondary' | 'danger';
+};
+
+type TotalItemProps = {
+  item: Total;
+  onDelete: (id: number) => void;
+  isDark: boolean;
+  index: number;
+};
+
+type EmptyStateProps = {
+  isDark: boolean;
+};
+
 // Custom Button Component
-const CustomButton = ({ title, onPress, style, textStyle, disabled = false, variant = 'primary' }) => {
+const CustomButton = ({ title, onPress, style, textStyle, disabled = false, variant = 'primary' }: CustomButtonProps) => {
   const [scaleValue] = useState(new Animated.Value(1));
 
   const handlePressIn = () => {
@@ -74,7 +94,7 @@ const CustomButton = ({ title, onPress, style, textStyle, disabled = false, vari
 };
 
 // Animated Total Item Component
-const TotalItem = ({ item, onDelete, isDark, index }) => {
+const TotalItem = ({ item, onDelete, isDark, index }: TotalItemProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
 
@@ -176,7 +196,7 @@ const TotalItem = ({ item, onDelete, isDark, index }) => {
 };
 
 // Empty State Component
-const EmptyState = ({ isDark }) => {
+const EmptyState = ({ isDark }: EmptyStateProps) => {
   const theme = {
     text: isDark ? '#ffffff' : '#000000',
     secondaryText: isDark ? '#888888' : '#666666',
