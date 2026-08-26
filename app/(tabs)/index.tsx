@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -15,12 +15,28 @@ import {
   useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createTable, getTotals, insertDeleteTotals, insertTotal } from '../../database/SQLite';
+import { createTable, getTotals, insertDeleteTotals, insertTotal, type SavedTotal } from '../../database/SQLite';
 
 const { width, height } = Dimensions.get('window');
 
+type CustomButtonProps = {
+  title: string;
+  onPress: () => void;
+  style?: any;
+  textStyle?: any;
+  disabled?: boolean;
+};
+
+type NumberItemProps = {
+  item: number;
+  index: number;
+  totalNumbers: number;
+  isDark: boolean;
+  onRemove: (index: number) => void;
+};
+
 // Custom Button Component
-const CustomButton = ({ title, onPress, style, textStyle, disabled = false }) => {
+const CustomButton = ({ title, onPress, style, textStyle, disabled = false }: CustomButtonProps) => {
   const [scaleValue] = useState(new Animated.Value(1));
 
   const handlePressIn = () => {
@@ -56,7 +72,7 @@ const CustomButton = ({ title, onPress, style, textStyle, disabled = false }) =>
 };
 
 // Number Item Component with Animation
-const NumberItem = ({ item, index, totalNumbers, isDark, onRemove }) => {
+const NumberItem = ({ item, index, totalNumbers, isDark, onRemove }: NumberItemProps) => {
   const [fadeAnim] = useState(new Animated.Value(0));
 
   useEffect(() => {
@@ -92,9 +108,10 @@ const NumberItem = ({ item, index, totalNumbers, isDark, onRemove }) => {
 
 export default function App() {
   const [input, setInput] = useState('');
-  const [numbers, setNumbers] = useState([]);
-  const [savedTotals, setSavedTotals] = useState([]);
+  const [numbers, setNumbers] = useState<number[]>([]);
+  const [savedTotals, setSavedTotals] = useState<SavedTotal[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
+  const inputRef = useRef<any>(null);
   const [saveName, setSaveName] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -103,8 +120,8 @@ export default function App() {
 
   useEffect(() => {
     createTable();
-    fetchTotals();
-    
+    void fetchTotals();
+
     // Fade in animation on component mount
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -113,21 +130,49 @@ export default function App() {
     }).start();
   }, []);
 
-  const fetchTotals = () => {
-    getTotals((totals) => setSavedTotals(totals));
+  const fetchTotals = async () => {
+    const totals = await getTotals();
+    setSavedTotals(totals);
   };
 
-  const handleAddNumber = () => {
-    const num = parseFloat(input.replace(/,/g, ''));
-    if (!isNaN(num) && input.trim() !== '') {
+  const normalizeNumberString = (value: string) => {
+    const arabicDigits = '٠١٢٣٤٥٦٧٨٩';
+    const persianDigits = '۰۱۲۳۴۵۶۷۸۹';
+
+    return value
+      .replace(/[٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹]/g, (char) => {
+        const arabicIndex = arabicDigits.indexOf(char);
+        const persianIndex = persianDigits.indexOf(char);
+
+        if (arabicIndex !== -1) return String(arabicIndex);
+        if (persianIndex !== -1) return String(persianIndex);
+        return char;
+      })
+      .replace(/٫|٬/g, '.')
+      .replace(/[\u00A0\u200C\u200D]/g, '');
+  };
+
+  const handleAddNumber = (text?: string | unknown) => {
+    const rawInput = typeof text === 'string' ? text : input;
+    const normalizedInput = normalizeNumberString(rawInput || '');
+    const cleanedInput = normalizedInput.replace(/[^0-9.-]/g, '').trim();
+    const num = parseFloat(cleanedInput);
+    if (!isNaN(num) && cleanedInput !== '') {
       setNumbers(prev => [num, ...prev]);
       setInput('');
+      requestAnimationFrame(() => {
+        inputRef.current?.clear();
+        inputRef.current?.focus();
+      });
     } else {
       Alert.alert('Invalid Input', 'Please enter a valid number');
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
     }
   };
 
-  const handleRemoveNumber = (index) => {
+  const handleRemoveNumber = (index: number) => {
     Alert.alert(
       'Remove Number',
       'Are you sure you want to remove this number?',
@@ -229,23 +274,26 @@ export default function App() {
         {/* Input Section */}
         <View style={[styles.inputSection, { backgroundColor: theme.cardBackground }]}>
           <TextInput
+            ref={inputRef}
             style={[styles.input, { color: theme.text }]}
             placeholder="Enter a number"
             placeholderTextColor={theme.secondaryText}
             keyboardType="numeric"
             returnKeyType="done"
-            value={input}
+            blurOnSubmit={false}
+            autoCorrect={false}
+            autoCapitalize="none"
+            spellCheck={false}
             onChangeText={(text) => {
-              // Format number with commas as user types
-              const cleaned = text.replace(/[^0-9.-]/g, '');
-              const formatted = cleaned.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-              setInput(formatted);
+              setInput(text);
             }}
-            onSubmitEditing={handleAddNumber}
+            onSubmitEditing={(event) => {
+              handleAddNumber(event.nativeEvent.text);
+            }}
           />
           <CustomButton
             title="Add"
-            onPress={handleAddNumber}
+            onPress={() => handleAddNumber()}
             style={[styles.addButton, { backgroundColor: theme.accent }]}
             disabled={!input.trim()}
           />
