@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  FlatList,
-  Keyboard,
-  Modal,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  useColorScheme,
+    Alert,
+    Animated,
+    Dimensions,
+    FlatList,
+    Keyboard,
+    Modal,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createTable, getTotals, insertDeleteTotals, insertTotal, type SavedTotal } from '../../database/SQLite';
@@ -118,9 +118,20 @@ export default function App() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  const fetchTotals = async () => {
+    const totals = await getTotals();
+    setSavedTotals(totals);
+  };
+
   useEffect(() => {
     createTable();
-    void fetchTotals();
+
+    const loadTotals = async () => {
+      const totals = await getTotals();
+      setSavedTotals(totals);
+    };
+
+    void loadTotals();
 
     // Fade in animation on component mount
     Animated.timing(fadeAnim, {
@@ -129,11 +140,6 @@ export default function App() {
       useNativeDriver: true,
     }).start();
   }, []);
-
-  const fetchTotals = async () => {
-    const totals = await getTotals();
-    setSavedTotals(totals);
-  };
 
   const normalizeNumberString = (value: string) => {
     const arabicDigits = '٠١٢٣٤٥٦٧٨٩';

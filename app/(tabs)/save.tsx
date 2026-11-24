@@ -1,5 +1,5 @@
 import { clearAllTotals, deleteTotal, getTotals } from '@/database/SQLite';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,

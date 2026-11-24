@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "barcodereader",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.barcode-reader",
@@ -20,7 +19,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "package": "com.h41dar21.barcode_reader"
     },
     "web": {
