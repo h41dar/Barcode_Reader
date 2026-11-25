@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    FlatList,
-    Keyboard,
-    Modal,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    useColorScheme,
+  Alert,
+  Animated,
+  Dimensions,
+  FlatList,
+  Keyboard,
+  Modal,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  useColorScheme,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createTable, getTotals, insertDeleteTotals, insertTotal, type SavedTotal } from '../../database/SQLite';
@@ -268,14 +268,21 @@ export default function App() {
       
       <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
         {/* Header */}
-        <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.header}
+          activeOpacity={0.7}
+          onPress={() => {
+            inputRef.current?.blur();
+            Keyboard.dismiss();
+          }}
+        >
           <Text style={[styles.headerTitle, { color: theme.text }]}>
             Calculator
           </Text>
           <Text style={[styles.headerSubtitle, { color: theme.secondaryText }]}>
             {numbers.length} numbers added
           </Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Input Section */}
         <View style={[styles.inputSection, { backgroundColor: theme.cardBackground }]}>
